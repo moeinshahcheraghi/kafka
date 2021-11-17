@@ -94,10 +94,10 @@ services:
   kafka-producer:
     container_name: Kafka-producer
     build:
-      context: ./producer
+      context: ./producer-cluster
   kafka-consumer:
     container_name: Kafka-consumer
     build:
-      context: ./consumer
+      context: ./consumer-cluster
 
 
