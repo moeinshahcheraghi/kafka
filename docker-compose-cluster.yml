@@ -1,0 +1,103 @@
+version: '3.3'
+services:
+  zoo1:
+    image: confluentinc/cp-zookeeper:6.2.1
+    container_name: zoo1
+    ports:
+      - 127.0.0.1:2181:2181
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_SERVERS: zoo1:2888:3888;zoo2:2888:3888;zoo3:2888:3888
+  zoo2:
+    image: confluentinc/cp-zookeeper:6.2.1
+    container_name: zoo2
+    ports:
+      - 127.0.0.1:2182:2182
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2182
+      ZOOKEEPER_SERVER_ID: 2
+      ZOOKEEPER_SERVERS: zoo1:2888:3888;zoo2:2888:3888;zoo3:2888:3888
+  zoo3:
+    image: confluentinc/cp-zookeeper:6.2.1
+    container_name: zoo3
+    ports:
+      - "2183:2183"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2183
+      ZOOKEEPER_SERVER_ID: 3
+      ZOOKEEPER_SERVERS: zoo1:2888:3888;zoo2:2888:3888;zoo3:2888:3888
+
+  kafka1:
+    image: wurstmeister/kafka
+    restart: always
+    container_name: kafka1
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092
+      KAFKA_LISTENERS: PLAINTEXT://kafka1:9092
+      KAFKA_ADVERTISED_HOST_NAME: kafka1
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2182,zoo3:2183
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+
+
+  kafka2:
+    image: wurstmeister/kafka
+    restart: always
+    hostname: kafka2
+    container_name: kafka2
+    ports:
+      - 127.0.0.1:9093:9093
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9093
+      KAFKA_LISTENERS: PLAINTEXT://kafka2:9093
+      KAFKA_ADVERTISED_HOST_NAME: kafka2
+      KAFKA_ADVERTISED_PORT: 9093
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2182,zoo3:2183
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+
+  kafka3:
+    image: wurstmeister/kafka
+    restart: always
+    hostname: kafka3
+    container_name: kafka3
+    ports:
+      - 127.0.0.1:9094:9094
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:9094
+      KAFKA_LISTENERS: PLAINTEXT://kafka3:9094
+      KAFKA_ADVERTISED_HOST_NAME: kafka3
+      KAFKA_ADVERTISED_PORT: 9094
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2181,zoo3:2181
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop:latest
+    container_name: kafdrop
+    ports:
+      - 9000:9000
+    environment:
+      - KAFKA_BROKERCONNECT=kafka1:9092,kafka2:9093,kafka3:9094
+    depends_on:
+      - kafka1
+  kafka-producer:
+    container_name: Kafka-producer
+    build:
+      context: ./producer
+  kafka-consumer:
+    container_name: Kafka-consumer
+    build:
+      context: ./consumer
+
+
